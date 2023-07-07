@@ -1,0 +1,77 @@
+def scrape_product_details(url):
+    # Send a GET request to the URL and retrieve the HTML content
+    response = requests.get(url)
+    content = response.text
+    
+    # Create a BeautifulSoup object to parse the HTML content
+    soup = BeautifulSoup(content, 'html.parser')
+    
+    # Find the relevant elements containing product information
+    product_elements = soup.find_all('div', {'data-component-type': 's-search-result'})
+    
+    # Initialize a list to store the scraped data
+    products = []
+    
+    # Iterate over the product elements and extract the required details
+    for product in product_elements:
+        # Extract the product URL
+        product_url = product.find('a', {'class': 'a-link-normal s-no-outline'})['href']
+        
+        # Extract the product name
+        product_name = product.find('span', {'class': 'a-size-medium a-color-base a-text-normal'}).text
+        
+        # Extract the product price
+        product_price = product.find('span', {'class': 'a-offscreen'}).text
+        
+        # Extract the rating
+        rating = product.find('span', {'class': 'a-icon-alt'}).text.split()[0]
+        
+        # Extract the number of reviews
+        num_reviews = product.find('span', {'class': 'a-size-base'}).text
+        
+        # Create a dictionary to store the scraped data for this product
+        product_data = {
+            'URL': product_url,
+            'Name': product_name,
+            'Price': product_price,
+            'Rating': rating,
+            'Reviews': num_reviews
+        }
+        
+        # Add the product data to the list
+        products.append(product_data)
+    
+    # Return the list of scraped products
+    return products
+
+# Set the base URL and the number of pages to scrape
+base_url = 'https://www.amazon.in/s?k=bags&crid=2M096C61O4MLT&qid=1653308124&sprefix=ba%2Caps%2C283&ref=sr_pg_{}'
+num_pages = 20
+
+# Initialize a list to store all the products
+all_products = []
+
+# Iterate over the desired number of pages and scrape the products
+for page in range(1, num_pages + 1):
+    # Create the URL for the current page
+    url = base_url.format(page)
+    
+    # Scrape the product details from the current page
+    products = scrape_product_details(url)
+    
+    # Add the scraped products to the list
+    all_products.extend(products)
+
+# Print the scraped product details
+for product in all_products:
+    URL='URL:','https://www.amazon.in/'+product['URL']
+    Name='Name:', product['Name']
+    Price='Price:', product['Price']
+    Rating='Rating:', product['Rating']
+    Reviews='Reviews:', product['Reviews']
+
+
+with open("Result.csv",mode="w",encoding="utf-8")as f:
+    csv_writer = csv.writer(f)
+    csv_writer.writerow(all_products)
+
